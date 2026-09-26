@@ -260,10 +260,69 @@ export const adminUpdateBooking = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await assertAdmin(data);
     const supabase = await admin();
-    const { error } = await supabase
-      .from("workshop_bookings")
-      .update({ name: data.name, phone: data.phone, email: data.email })
-      .eq("id", data.id);
+    const email = data.email.toLowerCase();
+    const { data: booking, error: lookupError } = await supabase
+      .from("workshop_bookings").select("contact_id").eq("id", data.id).maybeSingle();
+    if (lookupError) throw new Error(lookupError.message);
+    const contactId = (booking as { contact_id: string | null } | null)?.contact_id;
+    if (contactId) {
+      const { error: contactError } = await supabase
+        .from("contacts").update({ name: data.name, phone: data.phone, email }).eq("id", contactId);
+      if (contactError) {
+        if (contactError.code === "23505") throw new Error("هذا البريد مستخدم لجهة اتصال أخرى.");
+        throw new Error(contactError.message);
+      }
+      const { error } = await supabase.from("workshop_bookings")
+        .update({ name: data.name, phone: data.phone, email }).eq("contact_id", contactId);
+      if (error) throw new Error(error.message);
+    } else {
+      const { error } = await supabase.from("workshop_bookings")
+        .update({ name: data.name, phone: data.phone, email }).eq("id", data.id);
+      if (error) throw new Error(error.message);
+    }
+    return { ok: true };
+  });
+
+export type AdminContact = {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  subscribed: boolean;
+  created_at: string;
+  workshops: string[];
+};
+
+export const adminListContacts = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => credentials.parse(data))
+  .handler(async ({ data }): Promise<AdminContact[]> => {
+    await assertAdmin(data);
+    const supabase = await admin();
+    const { data: rows, error } = await supabase
+      .from("contacts")
+      .select("id, name, phone, email, subscribed, created_at, workshop_bookings(workshops(title))")
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return (rows ?? []).map((row: Record<string, unknown>) => ({
+      id: row["id"] as string,
+      name: row["name"] as string,
+      phone: row["phone"] as string,
+      email: row["email"] as string,
+      subscribed: row["subscribed"] as boolean,
+      created_at: row["created_at"] as string,
+      workshops: ((row["workshop_bookings"] as { workshops: { title?: string } | null }[] | null) ?? [])
+        .map((b) => b.workshops?.title ?? "—"),
+    }));
+  });
+
+export const adminSetContactSubscribed = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) =>
+    credentials.extend({ id: z.string().uuid(), subscribed: z.boolean() }).parse(data),
+  )
+  .handler(async ({ data }) => {
+    await assertAdmin(data);
+    const supabase = await admin();
+    const { error } = await supabase.from("contacts").update({ subscribed: data.subscribed }).eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });

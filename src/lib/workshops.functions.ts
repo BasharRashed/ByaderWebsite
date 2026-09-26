@@ -149,14 +149,24 @@ export const workshopQueryOptions = (slug: string) =>
 
 const bookingSchema = z.object({
   slug: z.string(),
-  name: z.string().trim().min(2),
-  phone: z.string().trim().min(7),
-  email: z.string().trim().email(),
+  name: z.string().trim().min(2).max(100),
+  phone: z.string().trim().min(7).max(30),
+  email: z.string().trim().email().max(255),
+  subscribe: z.boolean().default(false),
 });
 
 export const createBooking = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => bookingSchema.parse(data))
-  .handler(async ({ data }) => {
+  .handler(async ({ data }): Promise<{ ok: boolean; message?: string }> => {
+    try {
+      return await submitBooking(data);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "";
+      return { ok: false, message: /[\u0600-\u06FF]/.test(message) ? message : "تعذّر إرسال الحجز، حاول مرة أخرى." };
+    }
+  });
+
+async function submitBooking(data: z.infer<typeof bookingSchema>) {
     const supabase = publicClient();
     const { data: workshop, error: lookupError } = await supabase
       .from("workshops")
@@ -170,15 +180,43 @@ export const createBooking = createServerFn({ method: "POST" })
       throw new Error("انتهت هذه الورشة ولم يعد الحجز متاحاً.");
     }
 
-    const { error } = await supabase.from("workshop_bookings").insert({
-      workshop_id: (workshop as { id: string }).id,
+    // Contacts are server-only; one contact per email.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const email = data.email.toLowerCase();
+    const { data: existing, error: contactLookupError } = await supabaseAdmin
+      .from("contacts").select("id, subscribed").eq("email", email).maybeSingle();
+    if (contactLookupError) throw new Error(contactLookupError.message);
+    const current = existing as { id: string; subscribed: boolean } | null;
+    let contactId: string;
+    if (current) {
+      const { error: updateError } = await supabaseAdmin.from("contacts")
+        .update({ name: data.name, phone: data.phone, subscribed: current.subscribed || data.subscribe })
+        .eq("id", current.id);
+      if (updateError) throw new Error(updateError.message);
+      contactId = current.id;
+      const { data: dup, error: dupError } = await supabaseAdmin.from("workshop_bookings")
+        .select("id").eq("contact_id", contactId).eq("workshop_id", details.id)
+        .neq("status", "cancelled").limit(1);
+      if (dupError) throw new Error(dupError.message);
+      if ((dup ?? []).length > 0) throw new Error("أنت مسجّل مسبقاً في هذه الورشة بنفس البريد الإلكتروني.");
+    } else {
+      const { data: created, error: createError } = await supabaseAdmin.from("contacts")
+        .insert({ email, name: data.name, phone: data.phone, subscribed: data.subscribe })
+        .select("id").single();
+      if (createError) throw new Error(createError.message);
+      contactId = (created as { id: string }).id;
+    }
+
+    const { error } = await supabaseAdmin.from("workshop_bookings").insert({
+      workshop_id: details.id,
+      contact_id: contactId,
       name: data.name,
       phone: data.phone,
-      email: data.email,
-    });
+      email,
+    } as never);
     if (error) {
       if (error.message.includes("fully booked")) throw new Error("اكتمل عدد المقاعد في هذه الورشة.");
-      throw new Error(error.message);
+      throw new Error("تعذّر إرسال الحجز، حاول مرة أخرى.");
     }
     return { ok: true };
-  });
+}

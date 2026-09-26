@@ -44,9 +44,17 @@ import {
   type AdminWorkshop,
   type BookingStatus,
 } from "@/lib/admin.functions";
+import { ContactsSection } from "@/components/admin-contacts";
+import { SECTION_LIMIT, SearchBox, ShowAllLink, type AdminView } from "@/components/admin-list-tools";
+
+const ADMIN_VIEWS: AdminView[] = ["workshops", "completed", "bookings", "contacts"];
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
+  validateSearch: (search: Record<string, unknown>): { view?: AdminView } => {
+    const view = search["view"];
+    return typeof view === "string" && (ADMIN_VIEWS as string[]).includes(view) ? { view: view as AdminView } : {};
+  },
   head: () => ({
     meta: [
       { title: "لوحة إدارة البيدر" },
@@ -164,11 +172,17 @@ function Dashboard({ creds, onSignOut }: { creds: Credentials; onSignOut: () => 
   const updateBooking = useServerFn(adminUpdateBooking);
   const deleteBooking = useServerFn(adminDeleteBooking);
 
+  const { view } = Route.useSearch();
+  const show = (section: AdminView) => !view || view === section;
+  const limitOf = (section: AdminView) => (view === section ? undefined : SECTION_LIMIT);
+
   const [editing, setEditing] = useState<AdminWorkshop | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [bookingFilter, setBookingFilter] = useState("all");
   const [editingBookingId, setEditingBookingId] = useState<string | null>(null);
   const [bookingDraft, setBookingDraft] = useState({ name: "", phone: "", email: "" });
+  const [workshopSearch, setWorkshopSearch] = useState("");
+  const [completedSearch, setCompletedSearch] = useState("");
 
   const workshopsQuery = useQuery({
     queryKey: ["admin", "workshops"],
@@ -227,9 +241,15 @@ function Dashboard({ creds, onSignOut }: { creds: Credentials; onSignOut: () => 
     setBookingDraft({ name: booking.name, phone: booking.phone, email: booking.email });
   }
 
+  const matches = (title: string, query: string) =>
+    title.toLowerCase().includes(query.trim().toLowerCase());
   const allWorkshops = workshopsQuery.data ?? [];
-  const activeWorkshops = allWorkshops.filter((workshop) => !workshop.completed);
-  const completedWorkshops = allWorkshops.filter((workshop) => workshop.completed);
+  const activeWorkshops = allWorkshops.filter(
+    (workshop) => !workshop.completed && matches(workshop.title, workshopSearch),
+  );
+  const completedWorkshops = allWorkshops.filter(
+    (workshop) => workshop.completed && matches(workshop.title, completedSearch),
+  );
 
   const bookings = bookingsQuery.data ?? [];
   const filteredBookings = useMemo(
@@ -268,17 +288,29 @@ function Dashboard({ creds, onSignOut }: { creds: Credentials; onSignOut: () => 
       </header>
 
       <main className="mx-auto max-w-6xl space-y-14 px-5 py-12 sm:px-6">
+        {view ? (
+          <Button asChild variant="ghost" size="sm">
+            <Link to="/admin" search={{}}>
+              <ArrowRight className="size-4" aria-hidden="true" /> العودة إلى لوحة الإدارة
+            </Link>
+          </Button>
+        ) : null}
+
+        {show("workshops") ? (
         <section>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="font-display text-4xl text-primary">إدارة الورش</h2>
-            <Button
-              onClick={() => {
-                setEditing(null);
-                setFormOpen(true);
-              }}
-            >
-              <Plus className="size-4" aria-hidden="true" /> ورشة جديدة
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <SearchBox value={workshopSearch} onChange={setWorkshopSearch} placeholder="ابحث باسم الورشة" />
+              <Button
+                onClick={() => {
+                  setEditing(null);
+                  setFormOpen(true);
+                }}
+              >
+                <Plus className="size-4" aria-hidden="true" /> ورشة جديدة
+              </Button>
+            </div>
           </div>
 
           <div className="mt-6 overflow-x-auto rounded-md border border-border bg-card">
@@ -304,11 +336,11 @@ function Dashboard({ creds, onSignOut }: { creds: Credentials; onSignOut: () => 
                 ) : activeWorkshops.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
-                      لا توجد ورش قادمة.
+                      {workshopSearch ? "لا توجد نتائج مطابقة." : "لا توجد ورش قادمة."}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  activeWorkshops.map((workshop) => (
+                  activeWorkshops.slice(0, limitOf("workshops")).map((workshop) => (
                     <TableRow key={workshop.id}>
                       <TableCell className="font-medium">{workshop.title}</TableCell>
                       <TableCell>{workshop.category}</TableCell>
@@ -358,15 +390,22 @@ function Dashboard({ creds, onSignOut }: { creds: Credentials; onSignOut: () => 
               </TableBody>
             </Table>
           </div>
+          <ShowAllLink section="workshops" total={activeWorkshops.length} limit={limitOf("workshops")} />
         </section>
+        ) : null}
 
+        {show("completed") ? (
         <section>
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="font-display text-4xl text-primary">الورش المنتهية</h2>
-            <p className="text-sm text-muted-foreground">
-              تُنقل الورشة تلقائياً إلى هنا بعد انتهاء موعدها، ولا تظهر في الموقع.
-            </p>
+            <div>
+              <h2 className="font-display text-4xl text-primary">الورش المنتهية</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                تُنقل الورشة تلقائياً إلى هنا بعد انتهاء موعدها، ولا تظهر في الموقع.
+              </p>
+            </div>
+            <SearchBox value={completedSearch} onChange={setCompletedSearch} placeholder="ابحث باسم الورشة" />
           </div>
+
 
           <div className="mt-6 overflow-x-auto rounded-md border border-border bg-card">
             <Table>
@@ -385,11 +424,11 @@ function Dashboard({ creds, onSignOut }: { creds: Credentials; onSignOut: () => 
                 {completedWorkshops.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
-                      لا توجد ورش منتهية بعد.
+                      {completedSearch ? "لا توجد نتائج مطابقة." : "لا توجد ورش منتهية بعد."}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  completedWorkshops.map((workshop) => (
+                  completedWorkshops.slice(0, limitOf("completed")).map((workshop) => (
                     <TableRow key={workshop.id}>
                       <TableCell className="font-medium">{workshop.title}</TableCell>
                       <TableCell>{workshop.category}</TableCell>
@@ -429,8 +468,11 @@ function Dashboard({ creds, onSignOut }: { creds: Credentials; onSignOut: () => 
               </TableBody>
             </Table>
           </div>
+          <ShowAllLink section="completed" total={completedWorkshops.length} limit={limitOf("completed")} />
         </section>
+        ) : null}
 
+        {show("bookings") ? (
         <section>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="font-display text-4xl text-primary">الحجوزات</h2>
@@ -475,7 +517,7 @@ function Dashboard({ creds, onSignOut }: { creds: Credentials; onSignOut: () => 
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredBookings.map((booking) => (
+                  filteredBookings.slice(0, limitOf("bookings")).map((booking) => (
                     <TableRow key={booking.id}>
                       <TableCell className="font-medium">
                         {editingBookingId === booking.id ? (
@@ -581,7 +623,11 @@ function Dashboard({ creds, onSignOut }: { creds: Credentials; onSignOut: () => 
               </TableBody>
             </Table>
           </div>
+          <ShowAllLink section="bookings" total={filteredBookings.length} limit={limitOf("bookings")} />
         </section>
+        ) : null}
+
+        {show("contacts") ? <ContactsSection creds={creds} limit={limitOf("contacts")} /> : null}
       </main>
 
       <WorkshopDialog

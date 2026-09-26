@@ -35,8 +35,39 @@ export type Database = {
         }
         Relationships: []
       }
+      contacts: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+          phone: string
+          subscribed: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          phone: string
+          subscribed?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          phone?: string
+          subscribed?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       workshop_bookings: {
         Row: {
+          contact_id: string | null
           created_at: string
           email: string
           id: string
@@ -46,6 +77,7 @@ export type Database = {
           workshop_id: string
         }
         Insert: {
+          contact_id?: string | null
           created_at?: string
           email: string
           id?: string
@@ -55,6 +87,7 @@ export type Database = {
           workshop_id: string
         }
         Update: {
+          contact_id?: string | null
           created_at?: string
           email?: string
           id?: string
@@ -64,6 +97,13 @@ export type Database = {
           workshop_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "workshop_bookings_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "workshop_bookings_workshop_id_fkey"
             columns: ["workshop_id"]
