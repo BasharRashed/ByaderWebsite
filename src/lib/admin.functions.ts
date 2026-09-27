@@ -195,12 +195,12 @@ export const adminUploadWorkshopImage = createServerFn({ method: "POST" })
   });
 
 export const adminDeleteWorkshop = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => credentials.extend({ id: z.string() }).parse(data))
+  .inputValidator((data: unknown) => credentials.extend({ ids: z.array(z.string().uuid()).min(1).max(500) }).parse(data))
   .handler(async ({ data }) => {
     await assertAdmin(data);
     const supabase = await admin();
-    await supabase.from("workshop_bookings").delete().eq("workshop_id", data.id);
-    const { error } = await supabase.from("workshops").delete().eq("id", data.id);
+    await supabase.from("workshop_bookings").delete().in("workshop_id", data.ids);
+    const { error } = await supabase.from("workshops").delete().in("id", data.ids);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
@@ -328,11 +328,22 @@ export const adminSetContactSubscribed = createServerFn({ method: "POST" })
   });
 
 export const adminDeleteBooking = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => credentials.extend({ id: z.string() }).parse(data))
+  .inputValidator((data: unknown) => credentials.extend({ ids: z.array(z.string().uuid()).min(1).max(500) }).parse(data))
   .handler(async ({ data }) => {
     await assertAdmin(data);
     const supabase = await admin();
-    const { error } = await supabase.from("workshop_bookings").delete().eq("id", data.id);
+    const { error } = await supabase.from("workshop_bookings").delete().in("id", data.ids);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const adminDeleteContacts = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => credentials.extend({ ids: z.array(z.string().uuid()).min(1).max(500) }).parse(data))
+  .handler(async ({ data }) => {
+    await assertAdmin(data);
+    const supabase = await admin();
+    await supabase.from("workshop_bookings").delete().in("contact_id", data.ids);
+    const { error } = await supabase.from("contacts").delete().in("id", data.ids);
     if (error) throw new Error(error.message);
     return { ok: true };
   });

@@ -45,7 +45,7 @@ import {
   type BookingStatus,
 } from "@/lib/admin.functions";
 import { ContactsSection } from "@/components/admin-contacts";
-import { SECTION_LIMIT, SearchBox, ShowAllLink, type AdminView } from "@/components/admin-list-tools";
+import { SECTION_LIMIT, SearchBox, ShowAllLink, useSelection, SelectAllCheckbox, RowCheckbox, BulkDeleteBar, ExportButton, type AdminView } from "@/components/admin-list-tools";
 
 const ADMIN_VIEWS: AdminView[] = ["workshops", "completed", "bookings", "contacts"];
 
@@ -183,6 +183,9 @@ function Dashboard({ creds, onSignOut }: { creds: Credentials; onSignOut: () => 
   const [bookingDraft, setBookingDraft] = useState({ name: "", phone: "", email: "" });
   const [workshopSearch, setWorkshopSearch] = useState("");
   const [completedSearch, setCompletedSearch] = useState("");
+  const workshopSel = useSelection();
+  const completedSel = useSelection();
+  const bookingSel = useSelection();
 
   const workshopsQuery = useQuery({
     queryKey: ["admin", "workshops"],
@@ -194,8 +197,10 @@ function Dashboard({ creds, onSignOut }: { creds: Credentials; onSignOut: () => 
   });
 
   const removeMutation = useMutation({
-    mutationFn: (id: string) => deleteWorkshop({ data: { ...creds, id } }),
+    mutationFn: (ids: string[]) => deleteWorkshop({ data: { ...creds, ids } }),
     onSuccess: () => {
+      workshopSel.clear();
+      completedSel.clear();
       queryClient.invalidateQueries({ queryKey: ["admin"] });
       queryClient.invalidateQueries({ queryKey: ["workshops"] });
     },
@@ -229,8 +234,9 @@ function Dashboard({ creds, onSignOut }: { creds: Credentials; onSignOut: () => 
   });
 
   const deleteBookingMutation = useMutation({
-    mutationFn: (id: string) => deleteBooking({ data: { ...creds, id } }),
+    mutationFn: (ids: string[]) => deleteBooking({ data: { ...creds, ids } }),
     onSuccess: () => {
+      bookingSel.clear();
       queryClient.invalidateQueries({ queryKey: ["admin", "bookings"] });
       queryClient.invalidateQueries({ queryKey: ["workshops"] });
     },
@@ -269,6 +275,19 @@ function Dashboard({ creds, onSignOut }: { creds: Credentials; onSignOut: () => 
     return counts;
   }, [bookings]);
 
+  const workshopRows = (list: AdminWorkshop[], seatsLabel: string, completed: boolean) =>
+    list.map((w) => ({
+      "العنوان": w.title,
+      "التصنيف": w.category,
+      "اليوم والتاريخ": formatWorkshopDate(w.day),
+      "الوقت": formatWorkshopTimeRange(w.time, w.duration),
+      "مقدّم العرض": w.host,
+      [seatsLabel]: completed
+        ? `${activeBookingCounts.get(w.id) ?? 0} من ${w.capacity}`
+        : `${Math.max(w.capacity - (activeBookingCounts.get(w.id) ?? 0), 0)} من ${w.capacity}`,
+    }));
+  const statusLabel: Record<BookingStatus, string> = { coming: "قادم", in_progress: "قيد المتابعة", cancelled: "ملغى" };
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border bg-card">
@@ -302,6 +321,7 @@ function Dashboard({ creds, onSignOut }: { creds: Credentials; onSignOut: () => 
             <h2 className="font-display text-4xl text-primary">إدارة الورش</h2>
             <div className="flex flex-wrap items-center gap-2">
               <SearchBox value={workshopSearch} onChange={setWorkshopSearch} placeholder="ابحث باسم الورشة" />
+              <ExportButton fileName="الورش" rows={() => workshopRows(activeWorkshops, "المقاعد المتبقية", false)} />
               <Button
                 onClick={() => {
                   setEditing(null);
@@ -317,6 +337,7 @@ function Dashboard({ creds, onSignOut }: { creds: Credentials; onSignOut: () => 
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10"><SelectAllCheckbox selection={workshopSel} ids={activeWorkshops.slice(0, limitOf("workshops")).map((w) => w.id)} /></TableHead>
                   <TableHead className="text-right">العنوان</TableHead>
                   <TableHead className="text-right">التصنيف</TableHead>
                   <TableHead className="text-right">اليوم والتاريخ</TableHead>
@@ -329,19 +350,20 @@ function Dashboard({ creds, onSignOut }: { creds: Credentials; onSignOut: () => 
               <TableBody>
                 {workshopsQuery.isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
+                    <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
                       جارٍ التحميل…
                     </TableCell>
                   </TableRow>
                 ) : activeWorkshops.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
+                    <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
                       {workshopSearch ? "لا توجد نتائج مطابقة." : "لا توجد ورش قادمة."}
                     </TableCell>
                   </TableRow>
                 ) : (
                   activeWorkshops.slice(0, limitOf("workshops")).map((workshop) => (
                     <TableRow key={workshop.id}>
+                      <TableCell><RowCheckbox selection={workshopSel} id={workshop.id} label={workshop.title} /></TableCell>
                       <TableCell className="font-medium">{workshop.title}</TableCell>
                       <TableCell>{workshop.category}</TableCell>
                       <TableCell>{formatWorkshopDate(workshop.day)}</TableCell>
@@ -376,7 +398,7 @@ function Dashboard({ creds, onSignOut }: { creds: Credentials; onSignOut: () => 
                             disabled={removeMutation.isPending}
                             onClick={() => {
                               if (confirm(`حذف ورشة «${workshop.title}» وكل حجوزاتها؟`)) {
-                                removeMutation.mutate(workshop.id);
+                                removeMutation.mutate([workshop.id]);
                               }
                             }}
                           >
@@ -390,6 +412,7 @@ function Dashboard({ creds, onSignOut }: { creds: Credentials; onSignOut: () => 
               </TableBody>
             </Table>
           </div>
+          <BulkDeleteBar selection={workshopSel} noun="ورشة" warning="سيتم حذف كل حجوزاتها أيضاً." pending={removeMutation.isPending} onDelete={(ids) => removeMutation.mutate(ids)} />
           <ShowAllLink section="workshops" total={activeWorkshops.length} limit={limitOf("workshops")} />
         </section>
         ) : null}
@@ -403,7 +426,10 @@ function Dashboard({ creds, onSignOut }: { creds: Credentials; onSignOut: () => 
                 تُنقل الورشة تلقائياً إلى هنا بعد انتهاء موعدها، ولا تظهر في الموقع.
               </p>
             </div>
-            <SearchBox value={completedSearch} onChange={setCompletedSearch} placeholder="ابحث باسم الورشة" />
+            <div className="flex flex-wrap items-center gap-2">
+              <SearchBox value={completedSearch} onChange={setCompletedSearch} placeholder="ابحث باسم الورشة" />
+              <ExportButton fileName="الورش المنتهية" rows={() => workshopRows(completedWorkshops, "الحضور المسجّل", true)} />
+            </div>
           </div>
 
 
@@ -411,6 +437,7 @@ function Dashboard({ creds, onSignOut }: { creds: Credentials; onSignOut: () => 
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10"><SelectAllCheckbox selection={completedSel} ids={completedWorkshops.slice(0, limitOf("completed")).map((w) => w.id)} /></TableHead>
                   <TableHead className="text-right">العنوان</TableHead>
                   <TableHead className="text-right">التصنيف</TableHead>
                   <TableHead className="text-right">اليوم والتاريخ</TableHead>
@@ -423,13 +450,14 @@ function Dashboard({ creds, onSignOut }: { creds: Credentials; onSignOut: () => 
               <TableBody>
                 {completedWorkshops.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
+                    <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
                       {completedSearch ? "لا توجد نتائج مطابقة." : "لا توجد ورش منتهية بعد."}
                     </TableCell>
                   </TableRow>
                 ) : (
                   completedWorkshops.slice(0, limitOf("completed")).map((workshop) => (
                     <TableRow key={workshop.id}>
+                      <TableCell><RowCheckbox selection={completedSel} id={workshop.id} label={workshop.title} /></TableCell>
                       <TableCell className="font-medium">{workshop.title}</TableCell>
                       <TableCell>{workshop.category}</TableCell>
                       <TableCell>{formatWorkshopDate(workshop.day)}</TableCell>
@@ -454,7 +482,7 @@ function Dashboard({ creds, onSignOut }: { creds: Credentials; onSignOut: () => 
                             disabled={removeMutation.isPending}
                             onClick={() => {
                               if (confirm(`حذف ورشة «${workshop.title}» وكل حجوزاتها؟`)) {
-                                removeMutation.mutate(workshop.id);
+                                removeMutation.mutate([workshop.id]);
                               }
                             }}
                           >
@@ -468,6 +496,7 @@ function Dashboard({ creds, onSignOut }: { creds: Credentials; onSignOut: () => 
               </TableBody>
             </Table>
           </div>
+          <BulkDeleteBar selection={completedSel} noun="ورشة" warning="سيتم حذف كل حجوزاتها أيضاً." pending={removeMutation.isPending} onDelete={(ids) => removeMutation.mutate(ids)} />
           <ShowAllLink section="completed" total={completedWorkshops.length} limit={limitOf("completed")} />
         </section>
         ) : null}
@@ -476,6 +505,11 @@ function Dashboard({ creds, onSignOut }: { creds: Credentials; onSignOut: () => 
         <section>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="font-display text-4xl text-primary">الحجوزات</h2>
+            <div className="flex flex-wrap items-center gap-2">
+            <ExportButton
+              fileName="الحجوزات"
+              rows={() => filteredBookings.map((b) => ({ "الاسم": b.name, "الهاتف": b.phone, "البريد": b.email, "الورشة": b.workshop_title, "الحالة": statusLabel[b.status] }))}
+            />
             <select
               value={bookingFilter}
               onChange={(event) => setBookingFilter(event.target.value)}
@@ -489,12 +523,14 @@ function Dashboard({ creds, onSignOut }: { creds: Credentials; onSignOut: () => 
                 </option>
               ))}
             </select>
+            </div>
           </div>
 
           <div className="mt-6 overflow-x-auto rounded-md border border-border bg-card">
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10"><SelectAllCheckbox selection={bookingSel} ids={filteredBookings.slice(0, limitOf("bookings")).map((b) => b.id)} /></TableHead>
                   <TableHead className="text-right">الاسم</TableHead>
                   <TableHead className="text-right">الهاتف</TableHead>
                   <TableHead className="text-right">البريد</TableHead>
@@ -506,19 +542,20 @@ function Dashboard({ creds, onSignOut }: { creds: Credentials; onSignOut: () => 
               <TableBody>
                 {bookingsQuery.isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                    <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
                       جارٍ التحميل…
                     </TableCell>
                   </TableRow>
                 ) : filteredBookings.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                    <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
                       لا توجد حجوزات.
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredBookings.slice(0, limitOf("bookings")).map((booking) => (
                     <TableRow key={booking.id}>
+                      <TableCell><RowCheckbox selection={bookingSel} id={booking.id} label={booking.name} /></TableCell>
                       <TableCell className="font-medium">
                         {editingBookingId === booking.id ? (
                           <Input
@@ -609,7 +646,7 @@ function Dashboard({ creds, onSignOut }: { creds: Credentials; onSignOut: () => 
                             disabled={deleteBookingMutation.isPending || editingBookingId === booking.id}
                             onClick={() => {
                               if (confirm(`حذف حجز «${booking.name}» من ورشة «${booking.workshop_title}»؟`)) {
-                                deleteBookingMutation.mutate(booking.id);
+                                deleteBookingMutation.mutate([booking.id]);
                               }
                             }}
                           >
@@ -623,6 +660,7 @@ function Dashboard({ creds, onSignOut }: { creds: Credentials; onSignOut: () => 
               </TableBody>
             </Table>
           </div>
+          <BulkDeleteBar selection={bookingSel} noun="حجز" pending={deleteBookingMutation.isPending} onDelete={(ids) => deleteBookingMutation.mutate(ids)} />
           <ShowAllLink section="bookings" total={filteredBookings.length} limit={limitOf("bookings")} />
         </section>
         ) : null}

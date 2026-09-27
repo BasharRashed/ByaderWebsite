@@ -14,7 +14,7 @@ export const Route = createFileRoute("/")({
   loader: ({ context }) => context.queryClient.ensureQueryData(workshopsQueryOptions()),
   head: () => ({
     meta: [
-      { title: "البيدر" },
+      { title: "البيدر — مجتمع يتعلّم معاً" },
       { name: "description", content: "اكتشف ورش البيدر ومساحات المجتمع واحجز مكانك من دون إنشاء حساب." },
       { property: "og:title", content: "البيدر — مجتمع يتعلّم معاً" },
       { property: "og:description", content: "ورش حيّة ومساحات تجمع المبدعين والهواة حول المعرفة والحرفة." },
@@ -77,6 +77,9 @@ function HomePage() {
           <div className="mt-10 text-center">
             <Button asChild variant="glass" size="lg"><Link to="/workshops">عرض جميع الورش</Link></Button>
           </div>
+        </section>
+        <section id="about" aria-labelledby="about-title" className="mx-auto min-h-[60svh] max-w-6xl scroll-mt-16 px-5 py-24 sm:px-6">
+          <h2 id="about-title" className="font-display text-5xl text-primary sm:text-7xl">عن البيدر</h2>
         </section>
         <CommunityStory />
       </main>

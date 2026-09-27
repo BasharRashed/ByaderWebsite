@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronDown, Loader2 } from "lucide-react";
+import { ChevronDown, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { adminListContacts, adminSetContactSubscribed } from "@/lib/admin.functions";
-import { SearchBox, ShowAllLink } from "@/components/admin-list-tools";
+import { adminListContacts, adminSetContactSubscribed, adminDeleteContacts } from "@/lib/admin.functions";
+import { SearchBox, ShowAllLink, useSelection, SelectAllCheckbox, RowCheckbox, BulkDeleteBar, ExportButton } from "@/components/admin-list-tools";
 
 function WorkshopList({ workshops }: { workshops: string[] }) {
   const [open, setOpen] = useState(false);
@@ -40,6 +40,16 @@ export function ContactsSection({ creds, limit }: { creds: { username: string; p
   const queryClient = useQueryClient();
   const listContacts = useServerFn(adminListContacts);
   const setSubscribed = useServerFn(adminSetContactSubscribed);
+  const deleteContacts = useServerFn(adminDeleteContacts);
+  const selection = useSelection();
+  const deleteMutation = useMutation({
+    mutationFn: (ids: string[]) => deleteContacts({ data: { ...creds, ids } }),
+    onSuccess: () => {
+      selection.clear();
+      queryClient.invalidateQueries({ queryKey: ["admin"] });
+      queryClient.invalidateQueries({ queryKey: ["workshops"] });
+    },
+  });
   const [onlySubscribed, setOnlySubscribed] = useState(false);
   const [search, setSearch] = useState("");
   const contactsQuery = useQuery({
@@ -63,6 +73,10 @@ export function ContactsSection({ creds, limit }: { creds: { username: string; p
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-display text-4xl text-primary">جهات الاتصال</h2>
         <div className="flex flex-wrap items-center gap-4">
+          <ExportButton
+            fileName="جهات الاتصال"
+            rows={() => contacts.map((c) => ({ "الاسم": c.name, "الهاتف": c.phone, "البريد": c.email, "الورش المسجّل فيها": c.workshops.join("، "), "الأخبار": c.subscribed ? "مشترك" : "غير مشترك" }))}
+          />
           <SearchBox value={search} onChange={setSearch} placeholder="ابحث بالاسم أو الهاتف أو البريد" />
           <label className="flex items-center gap-2 text-sm text-muted-foreground">
             <input type="checkbox" checked={onlySubscribed} onChange={(e) => setOnlySubscribed(e.target.checked)} className="size-4 accent-primary" />
@@ -74,21 +88,24 @@ export function ContactsSection({ creds, limit }: { creds: { username: string; p
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-10"><SelectAllCheckbox selection={selection} ids={contacts.slice(0, limit).map((c) => c.id)} /></TableHead>
               <TableHead className="text-right">الاسم</TableHead>
               <TableHead className="text-right">الهاتف</TableHead>
               <TableHead className="text-right">البريد</TableHead>
               <TableHead className="text-right">الورش المسجّل فيها</TableHead>
               <TableHead className="text-right">الأخبار</TableHead>
+              <TableHead className="text-right">حذف</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {contactsQuery.isLoading ? (
-              <TableRow><TableCell colSpan={5} className="text-center"><Loader2 className="mx-auto size-4 animate-spin" /></TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center"><Loader2 className="mx-auto size-4 animate-spin" /></TableCell></TableRow>
             ) : contacts.length === 0 ? (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">{query ? "لا توجد نتائج مطابقة." : "لا توجد جهات اتصال بعد."}</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">{query ? "لا توجد نتائج مطابقة." : "لا توجد جهات اتصال بعد."}</TableCell></TableRow>
             ) : (
               contacts.slice(0, limit).map((contact) => (
                 <TableRow key={contact.id} className="align-top">
+                  <TableCell><RowCheckbox selection={selection} id={contact.id} label={contact.name} /></TableCell>
                   <TableCell className="font-bold">{contact.name}</TableCell>
                   <TableCell dir="ltr" className="text-right">{contact.phone}</TableCell>
                   <TableCell dir="ltr" className="text-right">{contact.email}</TableCell>
@@ -104,12 +121,26 @@ export function ContactsSection({ creds, limit }: { creds: { username: string; p
                       {contact.subscribed ? "مشترك" : "غير مشترك"}
                     </Button>
                   </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      aria-label={`حذف ${contact.name}`}
+                      disabled={deleteMutation.isPending}
+                      onClick={() => {
+                        if (confirm(`حذف «${contact.name}» وكل حجوزاته؟`)) deleteMutation.mutate([contact.id]);
+                      }}
+                    >
+                      <Trash2 className="size-4" aria-hidden="true" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
       </div>
+      <BulkDeleteBar selection={selection} noun="جهة اتصال" warning="سيتم حذف كل حجوزاتهم أيضاً." pending={deleteMutation.isPending} onDelete={(ids) => deleteMutation.mutate(ids)} />
       <ShowAllLink section="contacts" total={contacts.length} limit={limit} />
     </section>
   );
