@@ -79,7 +79,8 @@ function HomePage() {
           </div>
         </section>
         <section id="about" aria-labelledby="about-title" className="mx-auto min-h-[60svh] max-w-6xl scroll-mt-16 px-5 py-24 sm:px-6">
-          <h2 id="about-title" className="font-display text-5xl text-primary sm:text-7xl">عن البيدر</h2>
+          <p className="font-secondary text-lg font-bold text-accent">من قلب القدس</p>
+          <h2 id="about-title" className="mt-2 font-main text-5xl text-primary sm:text-7xl">عن البيدر</h2>
         </section>
         <CommunityStory />
       </main>

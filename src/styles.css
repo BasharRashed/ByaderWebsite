@@ -1,10 +1,23 @@
-@import "tailwindcss" source(none);
+@import "tailwindcss";
 @source "../src";
 @import "tw-animate-css";
 
 @font-face {
   font-family: "The Year of Handicrafts";
   src: url("/__l5e/assets-v1/e5e365ae-1625-40bd-896b-600ea0a72ad7/TheYearofHandicrafts-Regular.otf") format("opentype");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "The Year of Handicrafts";
+  src: url("/__l5e/assets-v1/00529152-7c69-4e17-8352-3087a1656477/TheYearofHandicrafts-Bold.otf") format("opentype");
+  font-display: swap;
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: "Lifta";
+  src: url("/__l5e/assets-v1/1ddff8fb-fb39-44d4-a062-883a9bb758ea/Liftaswashfixed-Regular.otf") format("opentype");
   font-display: swap;
 }
 
@@ -27,7 +40,9 @@
 @theme inline {
   --font-sans: var(--font-arabic);
   --font-arabic: "Cairo", sans-serif;
-  --font-display: "The Year of Handicrafts", "Cairo", sans-serif;
+  --font-display: "Lifta", "The Year of Handicrafts", "Cairo", sans-serif;
+  --font-main: "Lifta", "The Year of Handicrafts", "Cairo", sans-serif;
+  --font-secondary: "The Year of Handicrafts", "Cairo", sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -77,29 +92,34 @@
   --color-story-accent: var(--story-accent);
   --color-story-highlight: var(--story-highlight);
   --color-story-surface: var(--story-surface);
+  --color-brand-dark: var(--brand-dark);
+  --color-brand-yellow: var(--brand-yellow);
+  --color-brand-olive: var(--brand-olive);
+  --color-brand-sky: var(--brand-sky);
+  --color-brand-navy: var(--brand-navy);
 }
 
 :root {
   --font-arabic: "Cairo", sans-serif;
   --radius: 0.35rem;
-  --background: oklch(0.92 0.038 80);
-  --foreground: oklch(0.29 0.055 57);
-  --card: oklch(0.95 0.026 82);
-  --card-foreground: oklch(0.29 0.055 57);
-  --popover: oklch(0.95 0.026 82);
-  --popover-foreground: oklch(0.29 0.055 57);
-  --primary: oklch(0.36 0.14 29);
-  --primary-foreground: oklch(0.94 0.026 82);
-  --secondary: oklch(0.68 0.15 45);
-  --secondary-foreground: oklch(0.25 0.07 35);
-  --muted: oklch(0.87 0.035 78);
-  --muted-foreground: oklch(0.46 0.05 56);
-  --accent: oklch(0.57 0.17 43);
-  --accent-foreground: oklch(0.96 0.02 82);
+  --background: oklch(0.985 0.008 88);
+  --foreground: oklch(0.29 0.09 31);
+  --card: oklch(0.995 0.004 88);
+  --card-foreground: oklch(0.29 0.09 31);
+  --popover: oklch(0.995 0.004 88);
+  --popover-foreground: oklch(0.29 0.09 31);
+  --primary: oklch(0.31 0.115 29);
+  --primary-foreground: oklch(0.98 0.01 88);
+  --secondary: oklch(0.81 0.15 79);
+  --secondary-foreground: oklch(0.29 0.09 31);
+  --muted: oklch(0.94 0.025 86);
+  --muted-foreground: oklch(0.48 0.06 35);
+  --accent: oklch(0.58 0.17 43);
+  --accent-foreground: oklch(0.98 0.01 88);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.36 0.1 34 / 0.2);
-  --input: oklch(0.36 0.1 34 / 0.18);
+  --border: oklch(0.31 0.115 29 / 0.18);
+  --input: oklch(0.31 0.115 29 / 0.16);
   --ring: oklch(0.57 0.17 43);
   --glass: oklch(0.94 0.026 82 / 0.75);
   --warning: oklch(0.55 0.16 50);
@@ -109,7 +129,12 @@
   --story-muted: oklch(0.9 0.03 78);
   --story-accent: oklch(0.72 0.15 45);
   --story-highlight: oklch(0.84 0.15 87);
-  --story-surface: oklch(0.36 0.14 29);
+  --story-surface: oklch(0.24 0.012 55);
+  --brand-dark: oklch(0.24 0.012 55);
+  --brand-yellow: oklch(0.81 0.15 79);
+  --brand-olive: oklch(0.46 0.095 116);
+  --brand-sky: oklch(0.71 0.095 272);
+  --brand-navy: oklch(0.25 0.05 274);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
