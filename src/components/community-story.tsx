@@ -63,6 +63,7 @@ export function CommunityStory() {
             <div className="story-veil absolute inset-0" />
           </div>
         ))}
+        <div className={`pointer-events-none absolute inset-x-0 top-0 z-10 h-56 bg-gradient-to-b from-background via-background/60 to-transparent transition-opacity duration-700 ${activeRoom === 0 ? "opacity-100" : "opacity-0"}`} />
         <div className={`absolute inset-0 z-10 flex items-center px-5 sm:px-10 lg:px-16 ${activeRoom % 2 ? "justify-end" : "justify-start"}`}>
           <article key={currentRoom.title} className="story-caption relative w-[min(22rem,calc(100vw-2.5rem))] border border-story-foreground/20 bg-story-surface/65 px-6 py-6 shadow-2xl backdrop-blur-md sm:w-80 sm:px-7 sm:py-7">
             <span className="absolute inset-y-5 -right-px w-1 rounded-full bg-story-highlight shadow-[0_0_18px_color-mix(in_oklab,var(--story-highlight)_55%,transparent)]" />
@@ -74,6 +75,7 @@ export function CommunityStory() {
             <p className="mt-3 text-sm leading-7 text-story-muted sm:text-base">{currentRoom.text}</p>
           </article>
         </div>
+        <div className={`pointer-events-none absolute inset-x-0 bottom-0 z-20 h-44 bg-gradient-to-b from-transparent to-background transition-opacity duration-700 ${activeRoom === rooms.length - 1 ? "opacity-100" : "opacity-0"}`} />
       </div>
     </section>
   );

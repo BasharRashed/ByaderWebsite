@@ -8,6 +8,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { WorkshopCard } from "@/components/workshop-card";
 import { CommunityStory } from "@/components/community-story";
+import { AboutStory } from "@/components/about-story";
 import { workshopsQueryOptions } from "@/lib/workshops.functions";
 
 export const Route = createFileRoute("/")({
@@ -56,13 +57,15 @@ function HomePage() {
             <p className="mb-5 text-sm font-bold text-story-highlight">بيتٌ للمعرفة والحِرفة</p>
             <h1><img src={wordmark} alt="البيدر" className="mx-auto w-64 brightness-0 invert sm:w-96" /></h1>
             <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-story-muted sm:text-xl">مساحة بتتعلّم فيها، تلتقي، وتعمل أثر — نجلس معاً، نصنع معاً، ونتعلّم من بعضنا.</p>
-            <a href="#workshops" className="group mt-9 inline-flex flex-col items-center gap-2 text-lg font-semibold">
-              <span>اكتشف ورشنا</span>
+            <a href="#about" className="group mt-9 inline-flex flex-col items-center gap-2 text-lg font-semibold">
+              <span>تعرّف علينا</span>
               <ArrowDown className="size-5 text-muted-foreground transition-transform group-hover:translate-y-1" aria-hidden="true" />
             </a>
           </div>
         </section>
 
+        <AboutStory />
+        <CommunityStory />
         <section id="workshops" className="relative mx-auto max-w-6xl scroll-mt-16 px-5 py-24 sm:px-6 sm:py-32">
           <div className="mb-10 flex items-end justify-between gap-4">
             <div>
@@ -78,11 +81,6 @@ function HomePage() {
             <Button asChild variant="glass" size="lg"><Link to="/workshops">عرض جميع الورش</Link></Button>
           </div>
         </section>
-        <section id="about" aria-labelledby="about-title" className="mx-auto min-h-[60svh] max-w-6xl scroll-mt-16 px-5 py-24 sm:px-6">
-          <p className="font-secondary text-lg font-bold text-accent">من قلب القدس</p>
-          <h2 id="about-title" className="mt-2 font-main text-5xl text-primary sm:text-7xl">عن البيدر</h2>
-        </section>
-        <CommunityStory />
       </main>
       <SiteFooter />
     </div>
