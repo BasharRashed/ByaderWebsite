@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowUpLeft, Lightbulb, MapPin, Play, Sparkles, UsersRound } from "lucide-react";
+import { ArrowUpLeft, Lightbulb, MapPin, Sparkles, UsersRound, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import aboutVideo from "@/assets/albaydar-about.mp4";
 import aboutVideoWebm from "@/assets/albaydar-about.webm";
@@ -20,24 +20,15 @@ const offerings = [
 
 export function AboutStory() {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [hasStarted, setHasStarted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
 
-  useEffect(() => {
-    if (!hasStarted) return;
+  const toggleAudio = () => {
     const video = videoRef.current;
     if (!video) return;
-    video.load();
-    void video.play().catch(() => setIsPlaying(false));
-  }, [hasStarted]);
-
-  const playVideo = () => {
-    setIsPlaying(true);
-    if (!hasStarted) {
-      setHasStarted(true);
-      return;
-    }
-    void videoRef.current?.play();
+    const nextMuted = !video.muted;
+    video.muted = nextMuted;
+    setIsMuted(nextMuted);
+    if (video.paused) void video.play();
   };
 
   return (
@@ -94,31 +85,30 @@ export function AboutStory() {
                 <video
                   ref={videoRef}
                   poster={aboutPoster}
-                  preload="none"
+                  preload="metadata"
                   playsInline
-                  controls={isPlaying}
-                  onPlay={() => setIsPlaying(true)}
-                  onPause={() => setIsPlaying(false)}
-                  className="absolute inset-0 h-full w-full object-contain"
+                  autoPlay
+                  muted
+                  loop
+                  onClick={toggleAudio}
+                  className="absolute inset-0 h-full w-full cursor-pointer object-contain"
                 >
-                  {hasStarted && <source src={aboutVideoWebm} type="video/webm" />}
-                  {hasStarted && <source src={aboutVideo} type="video/mp4" />}
+                  <source src={aboutVideoWebm} type="video/webm" />
+                  <source src={aboutVideo} type="video/mp4" />
                 </video>
-                {!isPlaying && (
-                  <div className="absolute inset-0 grid place-items-center bg-brand-dark/20">
-                    <Button
-                      type="button"
-                      size="icon"
-                      variant="secondary"
-                      onClick={playVideo}
-                      aria-label="تشغيل فيديو عن البيدر"
-                      className="size-20 rounded-full border-2 border-story-foreground/70 bg-story-foreground/90 text-primary shadow-2xl hover:scale-105 hover:bg-story-foreground sm:size-24"
-                    >
-                      <Play className="size-8 fill-current sm:size-10" aria-hidden="true" />
-                    </Button>
-                    <span className="absolute bottom-6 right-6 font-secondary text-lg font-bold text-story-foreground">شاهد حكاية البيدر</span>
-                  </div>
-                )}
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="secondary"
+                  onClick={toggleAudio}
+                  aria-label={isMuted ? "تشغيل صوت الفيديو" : "كتم صوت الفيديو"}
+                  className="absolute bottom-4 right-4 size-11 rounded-full border border-story-foreground/70 bg-story-surface/80 text-story-foreground shadow-xl backdrop-blur-sm hover:bg-story-surface"
+                >
+                  {isMuted ? <VolumeX aria-hidden="true" /> : <Volume2 aria-hidden="true" />}
+                </Button>
+                <span className="pointer-events-none absolute bottom-5 right-16 font-secondary text-sm font-bold text-story-foreground drop-shadow-md">
+                  {isMuted ? "اضغط لتشغيل الصوت" : "الصوت يعمل"}
+                </span>
               </div>
               <p className="mt-8 border-r-2 border-brand-yellow pr-4 text-sm leading-7 text-muted-foreground sm:text-base">
                 دقيقة واحدة تختصر كيف تبدأ الفكرة، ثم تكبر حين تجد من يحتضنها.

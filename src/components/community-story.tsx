@@ -3,7 +3,7 @@ import DSC05918 from "/src/assets/DSC05918.webp";
 import DSC05930 from "/src/assets/DSC05930.webp";
 import DSC05950 from "/src/assets/DSC05950.webp";
 import DSC05961 from "/src/assets/DSC05961.webp";
-import spacesBackdrop from "/src/assets/albaydar-spaces-backdrop.webp";
+import spacesBackdrop from "/src/assets/albaydar-spaces-entry.webp";
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState, type CSSProperties } from "react";

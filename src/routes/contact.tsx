@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Facebook, Instagram, Linkedin, Mail, MessageCircle, Music2, Phone, UsersRound } from "lucide-react";
-import managerCard from "@/assets/amira-contact-card.png";
 import locationMark from "@/assets/H-01-Locaiton.jpg";
 import { Button } from "@/components/ui/button";
 import { SiteFooter } from "@/components/site-footer";
@@ -89,7 +88,7 @@ function ContactPage() {
           </div>
         </section>
 
-        <section className="mx-auto grid max-w-6xl gap-12 px-5 py-20 sm:px-6 lg:grid-cols-[1fr_0.95fr] lg:items-start lg:py-28">
+        <section className="mx-auto max-w-3xl px-5 py-20 sm:px-6 lg:py-28">
           <div>
             <p className="font-secondary text-lg font-bold text-accent">نحن قريبون</p>
             <h2 className="mt-2 font-main text-5xl text-primary sm:text-7xl">طرق التواصل</h2>
@@ -108,13 +107,6 @@ function ContactPage() {
             </div>
           </div>
 
-          <article className="border border-border bg-card p-4 shadow-sm">
-            <img src={managerCard} alt="بطاقة تواصل أميرة غروف، مديرة البيدر" className="w-full bg-background object-contain" />
-            <div className="px-2 pb-3 pt-6">
-              <p className="font-secondary text-2xl font-bold text-primary">أميرة غروف</p>
-              <p className="mt-1 text-muted-foreground">مديرة البيدر</p>
-            </div>
-          </article>
         </section>
 
          <section className="bg-muted py-20">

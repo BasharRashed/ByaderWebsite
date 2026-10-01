@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowDown } from "lucide-react";
-import heroImage from "@/assets/albaydar-hero.jpg";
+import heroImage from "@/assets/albaydar-spaces-backdrop.webp";
 import wordmark from "@/assets/albaydar-wordmark-clean.png";
 import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/site-header";
@@ -43,7 +43,7 @@ function HomePage() {
       <SiteHeader />
       <main>
         <section className="relative flex min-h-[calc(100svh-4rem)] items-center justify-center overflow-hidden">
-          <img src={heroImage} alt="لقاء حرفي في مجتمع البيدر" width={1920} height={1088} className="absolute inset-0 h-full w-full object-cover" />
+          <img src={heroImage} alt="بيت البيدر في القدس" className="absolute inset-0 h-full w-full object-cover" />
           <div className="hero-veil absolute inset-0" />
           {topics.map((topic, index) => (
             <div
