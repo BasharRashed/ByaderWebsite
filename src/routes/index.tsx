@@ -66,7 +66,7 @@ function HomePage() {
 
         <AboutStory />
         <CommunityStory />
-        <section id="workshops" className="relative mx-auto max-w-6xl scroll-mt-16 px-5 py-24 sm:px-6 sm:py-32">
+        <section id="workshops" className="relative mx-auto max-w-6xl scroll-mt-16 px-5 pb-10 pt-24 sm:px-6 sm:pb-14 sm:pt-32">
           <div className="mb-10 flex items-end justify-between gap-4">
             <div>
               <h2 className="font-display text-5xl text-primary sm:text-7xl">ورش العمل</h2>

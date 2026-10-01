@@ -3,6 +3,7 @@ import DSC05918 from "/src/assets/DSC05918.webp";
 import DSC05930 from "/src/assets/DSC05930.webp";
 import DSC05950 from "/src/assets/DSC05950.webp";
 import DSC05961 from "/src/assets/DSC05961.webp";
+import spacesBackdrop from "/src/assets/albaydar-spaces-backdrop.webp";
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
@@ -128,6 +129,13 @@ export function CommunityStory() {
       </div>
       <div ref={storyTrackRef} className="relative h-[760svh]">
         <div className="sticky top-0 h-svh overflow-hidden bg-brand-dark">
+          <img
+            src={spacesBackdrop}
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full scale-105 object-cover opacity-75 blur-sm"
+          />
+          <div className="absolute inset-0 bg-background/15" />
           <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-32 bg-gradient-to-b from-background via-background/55 to-transparent" />
 
           <div className="room-story-media absolute z-10 overflow-hidden border border-story-foreground/25 bg-story-surface shadow-2xl">
@@ -180,7 +188,7 @@ export function CommunityStory() {
 export function CommunityClosing() {
   return (
     <section aria-label="البيدر مش بس مكان">
-      <div className="bg-background px-5 py-20 text-center sm:py-28">
+      <div className="bg-background px-5 py-12 text-center sm:py-16">
         <p className="font-display text-5xl leading-tight text-primary sm:text-7xl">البيدر مش بس مكان…</p>
         <p className="mx-auto mt-5 max-w-2xl text-lg leading-9 text-muted-foreground sm:text-2xl sm:leading-10">
           هو مساحة بتتعلّم فيها، تشتغل، تلتقي، وتعمل أثر.
