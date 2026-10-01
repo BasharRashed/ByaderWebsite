@@ -3,10 +3,11 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 import { brokeredPreviewStorage } from './previewAuthStorage';
 
+// Safely check Netlify's server (process.env) first, then fallback to Vite's browser client (import.meta.env)
 // @ts-ignore
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+const SUPABASE_URL = (typeof process !== 'undefined' && process.env.VITE_SUPABASE_URL) ? process.env.VITE_SUPABASE_URL : import.meta.env.VITE_SUPABASE_URL as string;
 // @ts-ignore
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+const SUPABASE_PUBLISHABLE_KEY = (typeof process !== 'undefined' && process.env.VITE_SUPABASE_PUBLISHABLE_KEY) ? process.env.VITE_SUPABASE_PUBLISHABLE_KEY : import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
