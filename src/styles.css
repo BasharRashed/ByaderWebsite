@@ -4,20 +4,20 @@
 
 @font-face {
   font-family: "The Year of Handicrafts";
-  src: url("/__l5e/assets-v1/e5e365ae-1625-40bd-896b-600ea0a72ad7/TheYearofHandicrafts-Regular.otf") format("opentype");
+  src: url("/src/assets/TheYearofHandicrafts-Regular.otf") format("opentype");
   font-display: swap;
 }
 
 @font-face {
   font-family: "The Year of Handicrafts";
-  src: url("/__l5e/assets-v1/00529152-7c69-4e17-8352-3087a1656477/TheYearofHandicrafts-Bold.otf") format("opentype");
+  src: url("/assets/TheYearofHandicrafts-Bold.otf") format("opentype");
   font-display: swap;
   font-weight: 700;
 }
 
 @font-face {
   font-family: "Lifta";
-  src: url("/__l5e/assets-v1/1ddff8fb-fb39-44d4-a062-883a9bb758ea/Liftaswashfixed-Regular.otf") format("opentype");
+  src: url("/src/assets/Liftaswashfixed-Regular.otf") format("opentype");
   font-display: swap;
 }
 
@@ -258,3 +258,38 @@
 @media (prefers-reduced-motion: reduce) {
   .result-mark-circle, .result-mark-path { animation: none; stroke-dashoffset: 0; }
 }
+.room-story-media {
+  left: calc(50% - (28vw + (22vw * var(--room-expand))));
+  top: calc(50% - (27vh + (23vh * var(--room-expand))));
+  width: calc(56vw + (44vw * var(--room-expand)));
+  height: calc(54vh + (46vh * var(--room-expand)));
+  border-radius: calc(0.5rem * (1 - var(--room-expand)));
+  will-change: left, top, width, height;
+}
+
+.room-story-copy {
+  opacity: var(--room-copy-opacity);
+  transform: translateY(calc((1 - var(--room-copy-opacity)) * 1.5rem));
+  pointer-events: none;
+  will-change: opacity, transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .float-a, .float-b, .story-caption { animation: none; }
+  .parallax-image { transform: none; }
+  .room-story-media { left: 0; top: 0; width: 100vw; height: 100vh; border-radius: 0; }
+  .room-story-copy { opacity: 1; transform: none; }
+}
+
+@media (max-width: 639px) {
+  .room-story-media {
+    left: calc(50% - (43vw + (7vw * var(--room-expand))));
+    top: calc(50% - (25vh + (25vh * var(--room-expand))));
+    width: calc(86vw + (14vw * var(--room-expand)));
+    height: calc(50vh + (50vh * var(--room-expand)));
+  }
+}
+
+/* Booking result popup marks */
+.result-mark { width: 5.5rem; height: 5.5rem; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }

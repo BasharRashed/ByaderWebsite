@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { WorkshopCard } from "@/components/workshop-card";
-import { CommunityStory } from "@/components/community-story";
+import { CommunityStory, CommunityClosing } from "@/components/community-story";
 import { AboutStory } from "@/components/about-story";
 import { workshopsQueryOptions } from "@/lib/workshops.functions";
 
@@ -81,6 +81,7 @@ function HomePage() {
             <Button asChild variant="glass" size="lg"><Link to="/workshops">عرض جميع الورش</Link></Button>
           </div>
         </section>
+        <CommunityClosing />
       </main>
       <SiteFooter />
     </div>

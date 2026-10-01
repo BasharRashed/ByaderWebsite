@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowUpLeft, Lightbulb, MapPin, Play, Sparkles, UsersRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import aboutVideo from "@/assets/albaydar-about.mp4";
@@ -8,6 +8,7 @@ import communityImage from "@/assets/about-community.jpg";
 import guidanceImage from "@/assets/about-guidance.jpg";
 import craftImage from "@/assets/about-craft.jpg";
 import buildingImage from "@/assets/about-building.webp";
+
 
 const offerings = [
   "ورش عمل وتدريب",
@@ -20,12 +21,23 @@ const offerings = [
 export function AboutStory() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
 
-  const playVideo = () => {
+  useEffect(() => {
+    if (!hasStarted) return;
     const video = videoRef.current;
     if (!video) return;
+    video.load();
+    void video.play().catch(() => setIsPlaying(false));
+  }, [hasStarted]);
+
+  const playVideo = () => {
     setIsPlaying(true);
-    void video.play();
+    if (!hasStarted) {
+      setHasStarted(true);
+      return;
+    }
+    void videoRef.current?.play();
   };
 
   return (
@@ -82,15 +94,15 @@ export function AboutStory() {
                 <video
                   ref={videoRef}
                   poster={aboutPoster}
-                  preload="metadata"
+                  preload="none"
                   playsInline
                   controls={isPlaying}
                   onPlay={() => setIsPlaying(true)}
                   onPause={() => setIsPlaying(false)}
                   className="absolute inset-0 h-full w-full object-contain"
                 >
-                  <source src={aboutVideoWebm} type="video/webm" />
-                  <source src={aboutVideo} type="video/mp4" />
+                  {hasStarted && <source src={aboutVideoWebm} type="video/webm" />}
+                  {hasStarted && <source src={aboutVideo} type="video/mp4" />}
                 </video>
                 {!isPlaying && (
                   <div className="absolute inset-0 grid place-items-center bg-brand-dark/20">
@@ -136,7 +148,7 @@ export function AboutStory() {
           <div className="flex items-center gap-4"><Sparkles className="size-7 text-brand-yellow" aria-hidden="true" /><span className="font-secondary text-lg font-bold">أثر يستمر</span></div>
         </div>
       </div>
-      <div className="relative mt-10 h-[15rem] overflow-hidden sm:mt-14 sm:h-[19rem]">
+      <div className="relative mt-6 h-24 overflow-hidden sm:mt-8 sm:h-32">
         <img src={buildingImage} alt="واجهة بيت البيدر الحجري في القدس" className="absolute inset-x-0 bottom-0 h-3/4 w-full object-cover opacity-15" loading="lazy" />
         <div className="absolute inset-0 bg-gradient-to-b from-background via-background/90 via-35% to-background" />
       </div>
