@@ -24,9 +24,12 @@ type WorkshopRow = {
 type Availability = { reserved: number; remaining: number; isFull: boolean };
 
 function publicClient() {
+  const SUPABASE_URL = "https://ppjxmwfhfgcpfcrefadg.supabase.co";
+  const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwanhtd2ZoZmdjcGZjcmVmYWRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk5ODc0MDUsImV4cCI6MjEwNTU2MzQwNX0.qzg6stNQEmWCrUPlY12v9MGQMcHG6Whfh7kRbJ8gUWc";
+
   return createClient(
-    process.env["SUPABASE_URL"]!,
-    process.env["SUPABASE_PUBLISHABLE_KEY"]!,
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY,
     {
       auth: {
         storage: undefined,
